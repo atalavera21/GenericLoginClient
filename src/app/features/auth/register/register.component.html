@@ -1,0 +1,124 @@
+<div class="register-container">
+
+  <!-- Spinner de Carga -->
+  <app-spinner [visible]="loadingService.loading$ | async" [fullScreen]="true"></app-spinner>
+
+  <p-card styleClass="shadow-4 border-round-xl">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>Crear cuenta</h2>
+      </div>
+    </ng-template>
+    
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <!-- Datos personales -->
+      <h3>Información personal</h3>
+      <div class="grid">
+        <div class="col-12 field">
+          <label for="email" class="block mb-2">Email *</label>
+          <input id="email" type="email" pInputText formControlName="email" class="w-full" placeholder="ejemplo@correo.com" />
+          <small class="p-error block" *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+            Email es requerido y debe tener un formato válido
+          </small>
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="nombres" class="block mb-2">Nombres *</label>
+          <input id="nombres" type="text" pInputText formControlName="nombres" class="w-full" placeholder="Ingresa su nombre" />
+          <small class="p-error block" *ngIf="registerForm.get('nombres')?.invalid && registerForm.get('nombres')?.touched">
+            Nombre es requerido
+          </small>
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="apellidos" class="block mb-2">Apellidos *</label>
+          <input id="apellidos" type="text" pInputText formControlName="apellidos" class="w-full" placeholder="Ingresa sus apellidos" />
+          <small class="p-error block" *ngIf="registerForm.get('apellidos')?.invalid && registerForm.get('apellidos')?.touched">
+            Apellidos son requeridos
+          </small>
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="telefono" class="block mb-2">Teléfono *</label>
+          <input id="telefono" type="text" pInputText formControlName="telefono" class="w-full" placeholder="(+51) 123456789" />
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="fechaNacimiento" class="block mb-2">Fecha de Nacimiento</label>
+          <p-calendar id="fechaNacimiento" formControlName="fechaNacimiento" dateFormat="yy-mm-dd" 
+          [showIcon]="true" inputStyleClass="w-full" [maxDate]="maxDate" placeholder="Selecciona tu fecha de nacimiento"></p-calendar>
+        </div>
+
+        <div class="col-12 field">
+          <label for="url" class="block mb-2">URL Perfil (Opcional)</label>
+          <input id="url" type="text" pInputText formControlName="url" class="w-full" placeholder="https://ejemplo.com/perfil" />
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Datos de dirección -->
+      <h3>Información de domicilio</h3>
+      <div class="grid">
+        <div class="col-12 field">
+          <label for="direccion" class="block mb-2">Dirección *</label>
+          <input id="direccion" type="text" pInputText formControlName="direccion" class="w-full" placeholder="Calle y número" />
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="ciudad" class="block mb-2">Ciudad *</label>
+          <input id="ciudad" type="text" pInputText formControlName="ciudad" class="w-full" placeholder="Tu ciudad" />
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="estado" class="block mb-2">Estado/Provincia *</label>
+          <input id="estado" type="text" pInputText formControlName="estado" class="w-full" placeholder="Tu estado" />
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="pais" class="block mb-2">País *</label>
+          <input id="pais" type="text" pInputText formControlName="pais" class="w-full" placeholder="Tu país" />
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="codigoPostal" class="block mb-2">Código Postal</label>
+          <input id="codigoPostal" type="text" pInputText formControlName="codigoPostal" class="w-full" placeholder="Código postal" />
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Datos de acceso -->
+      <h3>Credenciales de acceso</h3>
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
+          <label for="contrasena" class="block mb-2">Contraseña *</label>
+          <p-password id="contrasena" formControlName="contrasena" [toggleMask]="true" [feedback]="true" 
+                      styleClass="w-full" promptLabel="Introduce tu contraseña" weakLabel="Débil"
+                      mediumLabel="Media" strongLabel="Fuerte" placeholder="Crea una contraseña segura"></p-password>
+          <small class="p-error block" *ngIf="registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched">
+            La contraseña debe tener al menos 6 caracteres
+          </small>
+        </div>
+
+        <div class="col-12 md:col-6 field">
+          <label for="confirmarContrasena" class="block mb-2">Confirmar Contraseña *</label>
+          <p-password id="confirmarContrasena" formControlName="confirmarContrasena" [toggleMask]="true" 
+                      styleClass="w-full" [feedback]="false" placeholder="Confirma tu contraseña"></p-password>
+          <small class="p-error block" *ngIf="registerForm.get('confirmarContrasena')?.hasError('passwordMismatch')">
+            Las contraseñas no coinciden
+          </small>
+        </div>
+      </div>
+
+      <div class="grid mt-5">
+        <div class="col-12 flex justify-content-end">
+          <a pButton label="Ya tengo cuenta" icon="pi pi-sign-in" class="p-button-outlined mr-2" routerLink="/login"></a>
+          <button pButton type="submit" label="Crear mi cuenta" icon="pi pi-user-plus" [disabled]="registerForm.invalid"></button>
+        </div>
+      </div>
+    </form>
+  </p-card>
+
+  <p-toast position="top-center"></p-toast>
+</div>

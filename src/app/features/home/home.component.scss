@@ -1,0 +1,370 @@
+/* Estilos específicos para el componente home con tema oscuro */
+
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Sección de introducción */
+.project-intro {
+  margin-bottom: 3rem;
+  position: relative;
+  
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    position: relative;
+    display: inline-block;
+    
+    /* Efecto de subrayado */
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+      border-radius: 2px;
+    }
+  }
+  
+  .subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 2.5rem;
+    color: var(--text-color-secondary);
+    max-width: 80%;
+  }
+  
+  .description {
+    display: flex;
+    align-items: stretch;
+    gap: 3rem;
+    background-color: var(--surface-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    
+    p {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      flex: 1;
+      padding: 2rem;
+      margin: 0;
+    }
+    
+    .intro-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background-color: rgba(201, 100, 66, 0.1);
+      padding: 2rem;
+      min-width: 280px;
+      justify-content: center;
+      border-left: 1px solid var(--surface-border);
+      
+      a:first-child {
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        
+        &:hover {
+          background-color: var(--primary-light) !important;
+          border-color: var(--primary-light) !important;
+        }
+      }
+    }
+  }
+}
+
+/* Sección de características */
+.implementation-details {
+  margin-bottom: 3rem;
+  
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    
+    &:before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 24px;
+      background-color: var(--primary-color);
+      margin-right: 12px;
+      border-radius: 2px;
+    }
+  }
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.feature-card {
+  background-color: var(--surface-card);
+  border-radius: var(--border-radius);
+  padding: 1.75rem;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid var(--surface-border);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    border-color: rgba(201, 100, 66, 0.3);
+    
+    .feature-header i {
+      background-color: var(--primary-color);
+      color: white;
+      transform: scale(1.05);
+    }
+  }
+  
+  .feature-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    
+    i {
+      font-size: 1.25rem;
+      color: var(--primary-color);
+      background-color: rgba(201, 100, 66, 0.15);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      margin-right: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    h3 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+  }
+  
+  p {
+    margin: 0;
+    color: var(--text-color-secondary);
+    line-height: 1.6;
+    flex: 1;
+  }
+}
+
+/* Sección de stack tecnológico */
+.tech-stack {
+  margin: 3rem 0;
+  
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: var(--text-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    
+    &:before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 24px;
+      background-color: var(--primary-color);
+      margin-right: 12px;
+      border-radius: 2px;
+    }
+  }
+  
+  .tech-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+  }
+  
+  .tech-card {
+    background-color: var(--surface-card);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+    
+    /* Degradado al borde superior */
+    &:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), transparent);
+    }
+    
+    &:nth-child(2):before {
+      background: linear-gradient(90deg, var(--secondary-color), transparent);
+    }
+    
+    h3 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      font-size: 1.4rem;
+      position: relative;
+      display: inline-block;
+      
+      &:after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background-color: var(--primary-color);
+      }
+    }
+    
+    &:nth-child(2) h3:after {
+      background-color: var(--secondary-color);
+    }
+    
+    ul {
+      padding-left: 0;
+      margin: 0;
+      list-style-type: none;
+      
+      li {
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+        position: relative;
+        
+        &:before {
+          content: '→';
+          position: absolute;
+          left: 0;
+          color: var(--primary-color);
+        }
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+      
+      .tech-name {
+        font-weight: 600;
+        color: var(--text-color);
+      }
+    }
+  }
+}
+
+/* Sección de notas del proyecto */
+.project-notes {
+  background-color: rgba(201, 100, 66, 0.08);
+  border-radius: var(--border-radius);
+  padding: 2.5rem;
+  margin-top: 3rem;
+  position: relative;
+  overflow: hidden;
+  
+  /* Efectos visuales en el fondo */
+  &:before {
+    content: '';
+    position: absolute;
+    top: -150px;
+    right: -150px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201, 100, 66, 0.15), transparent 70%);
+    z-index: 0;
+  }
+  
+  h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  
+  p {
+    margin-bottom: 1.25rem;
+    line-height: 1.7;
+    position: relative;
+    z-index: 1;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+/* Responsive */
+@media screen and (max-width: 992px) {
+  .project-intro {
+    h1 {
+      font-size: 2.5rem;
+    }
+    
+    .subtitle {
+      font-size: 1.25rem;
+      max-width: 100%;
+    }
+    
+    .description {
+      flex-direction: column;
+      
+      p {
+        padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+      }
+      
+      .intro-actions {
+        flex-direction: row;
+        border-left: none;
+        border-top: 1px solid var(--surface-border);
+        
+        a {
+          flex: 1;
+        }
+      }
+    }
+  }
+  
+  .tech-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .project-intro {
+    h1 {
+      font-size: 2rem;
+    }
+    
+    .description .intro-actions {
+      flex-direction: column;
+    }
+  }
+  
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .project-notes {
+    padding: 1.5rem;
+  }
+}

@@ -1,1 +1,326 @@
-/* You can add global styles to this file, and also import other style files */
+@import "primeflex/primeflex.css";
+
+:root {
+  /* Colores base del tema oscuro */
+  --surface-ground: #1a1d23; /* Fondo principal oscuro */
+  --surface-section: #20242c; /* Secciones y cabeceras */
+  --surface-card: #272b34; /* Tarjetas y contenedores */
+  --surface-overlay: #2d3239; /* Overlays y dropdowns */
+  --surface-border: #383e46; /* Bordes de elementos */
+  
+  /* Color naranja como acento principal */
+  --primary-color: #c96442; /* Naranja como color de acento */
+  --primary-dark: #aa5236; /* Naranja oscuro para hover */
+  --primary-light: #e87953; /* Naranja más claro */
+  --primary-lighter: rgba(201, 100, 66, 0.2); /* Naranja transparente para fondos */
+  
+  /* Otros colores de acento complementarios */
+  --secondary-color: #34c9a6; /* Verde azulado como acento secundario */
+  --secondary-light: rgba(52, 201, 166, 0.2); /* Versión transparente */
+  
+  /* Colores de texto */
+  --text-color: #e9ecef; /* Texto principal claro */
+  --text-color-secondary: #adb5bd; /* Texto secundario */
+  --text-muted: #7a8494; /* Texto auxiliar/muted */
+  
+  /* Colores de estado */
+  --success-color: #4caf50;
+  --info-color: #5ac8fa;
+  --warning-color: #ffcc00;
+  --danger-color: #ff3b30;
+  
+  /* Espaciado y radios */
+  --content-padding: 2rem;
+  --border-radius: 8px;
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+body {
+  background-color: var(--surface-ground) !important;
+  color: var(--text-color);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+/* Reset de elementos */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  color: var(--text-color);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: var(--primary-light);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+  }
+}
+
+/* Estilos para tarjetas y contenedores */
+.card {
+  background: var(--surface-card);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--surface-border);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.container {
+  padding: 0 var(--content-padding);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Clases de utilidad */
+.text-primary { color: var(--primary-color); }
+.text-secondary { color: var(--secondary-color); }
+.bg-primary-light { background-color: var(--primary-lighter); }
+.bg-secondary-light { background-color: var(--secondary-light); }
+
+/* Botones con estilo moderno */
+.p-button {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  border-radius: var(--border-radius) !important;
+  color: #ffffff !important;
+  transition: all 0.25s ease;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 12px rgba(201, 100, 66, 0.3);
+}
+
+.p-button:hover {
+  background-color: var(--primary-light) !important;
+  border-color: var(--primary-light) !important;
+  box-shadow: 0 6px 16px rgba(232, 121, 83, 0.4);
+  transform: translateY(-2px);
+}
+
+.p-button-outlined {
+  background-color: transparent !important;
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: none;
+}
+
+.p-button-outlined:hover {
+  background-color: rgba(201, 100, 66, 0.1) !important;
+  border-color: var(--primary-light) !important;
+  color: var(--primary-light) !important;
+}
+
+/* Botones secundarios */
+.p-button.p-button-secondary {
+  background-color: var(--secondary-color) !important;
+  border-color: var(--secondary-color) !important;
+  box-shadow: 0 4px 12px rgba(52, 201, 166, 0.25);
+}
+
+.p-button.p-button-secondary:hover {
+  background-color: rgba(52, 201, 166, 0.9) !important;
+  border-color: rgba(52, 201, 166, 0.9) !important;
+  box-shadow: 0 6px 16px rgba(52, 201, 166, 0.35);
+}
+
+.p-button-outlined.p-button-secondary {
+  background-color: transparent !important;
+  color: var(--secondary-color) !important;
+  border-color: var(--secondary-color) !important;
+}
+
+.p-button-outlined.p-button-secondary:hover {
+  background-color: rgba(52, 201, 166, 0.1) !important;
+}
+
+/* Divider de PrimeNG */
+.p-divider {
+  margin: 2.5rem 0;
+  
+  &:before {
+    border-top: 1px solid var(--surface-border);
+  }
+}
+
+/* Inputs con estilo dark */
+.p-inputtext,
+.p-dropdown,
+.p-multiselect {
+  background-color: var(--surface-overlay) !important;
+  color: var(--text-color) !important;
+  border-radius: var(--border-radius) !important;
+  padding: 0.75rem !important;
+  transition: all 0.2s ease;
+  border: 1px solid var(--surface-border) !important;
+}
+
+.p-inputtext:enabled:hover,
+.p-dropdown:not(.p-disabled):hover,
+.p-multiselect:not(.p-disabled):hover {
+  border-color: var(--primary-color) !important;
+}
+
+.p-inputtext:enabled:focus,
+.p-dropdown:not(.p-disabled).p-focus,
+.p-multiselect:not(.p-disabled).p-focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.2) !important;
+}
+
+/* Placeholder con mejor contraste */
+::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7;
+}
+
+/* Mejoras para íconos */
+.pi {
+  color: inherit;
+}
+
+/* Mejoras en tablas */
+.p-datatable {
+  background-color: var(--surface-card);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.p-datatable .p-datatable-header {
+  background-color: var(--surface-section);
+  border: none;
+  padding: 1.25rem;
+  font-weight: 600;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: var(--surface-section);
+  color: var(--text-color);
+  padding: 1rem 1.25rem;
+  border-color: var(--surface-border);
+  font-weight: 600;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  background-color: var(--surface-card);
+  transition: background-color 0.2s ease;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: rgba(201, 100, 66, 0.08);
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  padding: 1rem 1.25rem;
+  border-color: var(--surface-border);
+  color: var(--text-color-secondary);
+}
+
+/* Paneles */
+.p-panel {
+  background-color: var(--surface-card);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.p-panel .p-panel-header {
+  background-color: var(--surface-section);
+  color: var(--text-color);
+  border: none;
+  padding: 1.25rem;
+}
+
+.p-panel .p-panel-content {
+  padding: 1.25rem;
+  border: none;
+  background-color: var(--surface-card);
+}
+
+/* Mejoras en formularios */
+.field {
+  margin-bottom: 1.5rem;
+}
+
+.field > label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.p-checkbox .p-checkbox-box.p-highlight,
+.p-radiobutton .p-radiobutton-box.p-highlight {
+  border-color: var(--primary-color) !important;
+  background: var(--primary-color) !important;
+}
+
+/* Toast messages */
+.p-toast .p-toast-message {
+  background-color: var(--surface-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.p-toast .p-toast-message-success {
+  border-left: 6px solid var(--success-color);
+}
+
+.p-toast .p-toast-message-info {
+  border-left: 6px solid var(--info-color);
+}
+
+.p-toast .p-toast-message-warn {
+  border-left: 6px solid var(--warning-color);
+}
+
+.p-toast .p-toast-message-error {
+  border-left: 6px solid var(--danger-color);
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-ground);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--surface-border);
+  border-radius: 6px;
+  border: 3px solid var(--surface-ground);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-color);
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  :root {
+    --content-padding: 1rem;
+  }
+  
+  h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+}

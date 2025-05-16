@@ -1,0 +1,46 @@
+<div class="container mt-6">
+  <div class="confirmation-card">
+    <h2>Confirmación de Email</h2>
+    
+    <!-- Loader mientras se procesa -->
+    <div *ngIf="loading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Verificando tu email...</p>
+    </div>
+
+    <!-- Contenedor de resultados -->
+    <div *ngIf="!loading" class="result-container">
+      
+      <!-- Mensaje de éxito -->
+      <div *ngIf="success" class="success-message">
+        <div class="success-icon-container">
+          <div class="success-icon"></div>
+        </div>
+        <h3 style="color: #2E7D32;">¡Confirmación Exitosa!</h3>
+        <p>{{ mensaje }}</p>
+      </div>
+      
+      <!-- Mensaje de error -->
+      <div *ngIf="!success" class="error-message">
+        <div class="error-icon-container">
+          <div class="error-icon"></div>
+        </div>
+        <h3>Ha ocurrido un problema</h3>
+        <p>{{ mensaje }}</p>
+        
+        <!-- Lista de errores específicos -->
+        <ul  *ngIf="errors && errors.length > 0" class="error-list">
+          <li *ngFor="let error of errors">{{ error }}</li>
+        </ul>
+      </div>
+
+      <!-- Botón de acción -->
+      <button (click)="irALogin()" class="login-button">
+        Ir a Iniciar Sesión
+        <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 5L21 12M21 12L14 19M21 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

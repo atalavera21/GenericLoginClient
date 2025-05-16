@@ -1,0 +1,15 @@
+import { Routes } from '@angular/router';
+
+export const authRoutes: Routes = [
+  {
+    path: 'register',
+    loadComponent: () => import('./register/register.component').then(m => m.RegisterComponent),
+    title: 'Registro de Usuario'
+  },
+  {
+    path: 'confirm-email',
+    loadComponent: () => import('./confirm-email/confirm-email.component').then(m => m.ConfirmEmailComponent),
+    title: 'Confirmación de Correo'
+  }
+ 
+];

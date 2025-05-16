@@ -1,0 +1,218 @@
+/* Estilos modernos para el layout principal en tema oscuro */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  background-color: var(--surface-section);
+  padding: 0 var(--content-padding);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  
+  /* Borde inferior con el color primario */
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+  }
+  
+  .brand-container {
+    display: flex;
+    align-items: center;
+    
+    .logo {
+      height: 32px;
+      margin-right: 1rem;
+    }
+    
+    .app-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-color);
+      margin: 0;
+      letter-spacing: -0.01em;
+      
+      span {
+        color: var(--primary-color);
+      }
+    }
+  }
+  
+  .navbar {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    
+    a {
+      color: var(--text-color-secondary);
+      font-weight: 500;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--border-radius);
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      
+      &:hover, &.active {
+        color: var(--text-color);
+        background-color: rgba(201, 100, 66, 0.1);
+        text-decoration: none;
+      }
+      
+      &.active {
+        color: var(--primary-color);
+      }
+      
+      &.highlight {
+        background-color: var(--primary-color);
+        color: white;
+        
+        &:hover {
+          background-color: var(--primary-light);
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+}
+
+main {
+  flex: 1;
+  min-height: calc(100vh - 130px); /* 70px header + 60px footer */
+  padding: 2.5rem var(--content-padding);
+  position: relative;
+  
+  /* Gradiente sutil en el fondo */
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 250px;
+    background: radial-gradient(circle at top right, rgba(201, 100, 66, 0.1), transparent 70%);
+    z-index: -1;
+  }
+}
+
+footer {
+  background-color: var(--surface-section);
+  color: var(--text-color-secondary);
+  padding: 1rem var(--content-padding);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  position: relative;
+  
+  /* Borde superior con el color primario */
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--surface-border);
+  }
+  
+  a {
+    color: var(--text-color-secondary);
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+  }
+  
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .footer-brand {
+    font-weight: 600;
+    
+    span {
+      color: var(--primary-color);
+    }
+  }
+}
+
+/* Contenedor de página */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Animación para elementos de página */
+.page-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Elemento glow para efectos visuales */
+.glow-effect {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 100, 66, 0.15), transparent 70%);
+  filter: blur(20px);
+  z-index: -1;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  header {
+    flex-direction: column;
+    height: auto;
+    padding: 1rem var(--content-padding);
+    
+    .brand-container {
+      margin-bottom: 0.75rem;
+    }
+    
+    .navbar {
+      margin-left: 0;
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+  }
+  
+  main {
+    min-height: calc(100vh - 160px); /* Ajustado para header más alto */
+    padding: 1.5rem var(--content-padding);
+  }
+  
+  footer {
+    flex-direction: column;
+    height: auto;
+    padding: 1.5rem var(--content-padding);
+    gap: 1rem;
+    text-align: center;
+    
+    .footer-links {
+      justify-content: center;
+    }
+  }
+}

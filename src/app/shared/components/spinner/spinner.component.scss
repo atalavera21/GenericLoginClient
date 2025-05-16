@@ -1,0 +1,118 @@
+// Variables
+$brand-color: #C96442;
+$brand-secondary: rgba(201, 100, 66, 0.2);
+$white: #ffffff;
+$dark: #2c2c2c;
+$overlay-bg: rgba(255, 255, 255, 0.95);
+$overlay-dark: rgba(0, 0, 0, 0.6);
+
+// Mixins
+@mixin center-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Spinner Overlay
+.spinner-overlay {
+  position: fixed;
+  z-index: 9999;
+  @include center-flex;
+  background-color: $overlay-bg;
+  transition: all 0.3s ease;
+  
+  &.full-screen {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: $overlay-dark;
+  }
+}
+
+// Spinner Container
+.spinner-container {
+  @include center-flex;
+  flex-direction: column;
+  padding: 20px;
+  
+  .spinner-circle {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    
+    .circular {
+      animation: rotate 2s linear infinite;
+      height: 100%;
+      width: 100%;
+      transform-origin: center center;
+      
+      .path {
+        stroke: $brand-color;
+        stroke-dasharray: 89, 200;
+        stroke-dashoffset: 0;
+        stroke-linecap: round;
+        animation: dash 1.5s ease-in-out infinite;
+      }
+    }
+  }
+  
+  .spinner-text {
+    color: $brand-color;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    position: relative;
+    
+    &:after {
+      content: '...';
+      position: absolute;
+      width: 24px;
+      text-align: left;
+      animation: dots 1.5s infinite;
+    }
+  }
+}
+
+// Animations
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124;
+  }
+}
+
+@keyframes dots {
+  0% { opacity: 0; }
+  25% { content: '.'; opacity: 1; }
+  50% { content: '..'; opacity: 1; }
+  75% { content: '...'; opacity: 1; }
+  100% { opacity: 0; }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .spinner-overlay:not(.full-screen) {
+    background-color: rgba(33, 33, 33, 0.9);
+    
+    .spinner-text {
+      color: $white;
+    }
+  }
+}
