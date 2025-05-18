@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CommonModule } from '@angular/common';
-import { ConfirmEmailResponse } from '../../../core/models/confirm-email-response.model';
+import { ConfirmEmailResponse } from '../../../core/models/auth/confirm-email-response.model';
 
 @Component({
   selector: 'app-confirm-email',

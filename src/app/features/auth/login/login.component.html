@@ -1,0 +1,78 @@
+<div class="login-container">
+  <!-- Spinner de Carga -->
+  <app-spinner [visible]="loadingService.loading$ | async" [fullScreen]="true"></app-spinner>
+
+  <p-card styleClass="shadow-4 border-round-xl login-card">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>Iniciar sesión</h2>
+      </div>
+    </ng-template>
+    
+    <!-- <form [formGroup]="loginForm" (ngSubmit)="onSubmit()"> -->
+    <form [formGroup]="loginForm">
+      <!-- Credenciales de acceso -->
+      <div class="grid">
+        <div class="col-12 field">
+          <label for="email" class="block mb-2">Email</label>
+          <input id="email" type="email" pInputText formControlName="email" class="w-full" placeholder="ejemplo@correo.com" />
+          <small class="p-error block" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            Email es requerido y debe tener un formato válido
+          </small>
+        </div>
+
+        <div class="col-12 field">
+          <div class="flex justify-content-between align-items-center mb-2">
+            <label for="contrasena" class="block">Contraseña</label>
+            <a routerLink="/forgot-password" class="forgot-password">¿Olvidó su contraseña?</a>
+          </div>
+          <p-password id="contrasena" formControlName="contrasena" [toggleMask]="true" [feedback]="false"
+                    styleClass="w-full" placeholder="Ingresa tu contraseña"></p-password>
+          <small class="p-error block" *ngIf="loginForm.get('contrasena')?.invalid && loginForm.get('contrasena')?.touched">
+            La contraseña es requerida
+          </small>
+        </div>
+        
+        <div class="col-12 field remember-field">
+          <p-checkbox formControlName="recordarme" inputId="recordarme" [binary]="true"></p-checkbox>
+          <label for="recordarme" class="ml-2">Recordar mi sesión</label>
+        </div>
+      </div>
+
+      <div class="grid mt-4">
+        <div class="col-12">
+          <button pButton type="submit" label="Iniciar sesión" icon="pi pi-sign-in" class="w-full login-button" [disabled]="loginForm.invalid"></button>
+        </div>
+      </div>
+    </form>
+
+    <p-divider align="center">
+      <span class="divider-text">o continúa con</span>
+    </p-divider>
+
+    <!-- Proveedores externos -->
+    <div class="social-login">
+      <button pButton type="button" class="p-button-outlined social-button google">
+        <i class="pi pi-google"></i>
+        <span>Google</span>
+      </button>
+      
+      <button pButton type="button" class="p-button-outlined social-button facebook">
+        <i class="pi pi-facebook"></i>
+        <span>Facebook</span>
+      </button>
+      
+      <button pButton type="button" class="p-button-outlined social-button twitter">
+        <i class="pi pi-twitter"></i>
+        <span>Twitter</span>
+      </button>
+    </div>
+
+    <div class="register-link">
+      <span>¿No tienes cuenta?</span>
+      <a pButton label="Regístrate ahora" icon="pi pi-user-plus" class="p-button-text" routerLink="/register"></a>
+    </div>
+  </p-card>
+
+  <p-toast position="top-center"></p-toast>
+</div>

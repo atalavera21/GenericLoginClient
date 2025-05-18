@@ -10,6 +10,9 @@ export const authRoutes: Routes = [
     path: 'confirm-email',
     loadComponent: () => import('./confirm-email/confirm-email.component').then(m => m.ConfirmEmailComponent),
     title: 'Confirmación de Correo'
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./login/login.component').then(m => m.LoginComponent)
   }
- 
 ];

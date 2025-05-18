@@ -15,7 +15,7 @@ import { MessageService } from 'primeng/api';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { AuthService } from '../../../core/auth/auth.service';
-import { RegisterUserRequest } from '../../../core/models/user.model';
+import { RegisterUserRequest } from '../../../core/models/auth/user.model';
 
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { LoadingService } from '../../../core/auth/loading.service';

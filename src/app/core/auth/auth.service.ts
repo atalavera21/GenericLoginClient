@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { AuthResponse, RegisterUserRequest } from '../models/user.model';
+import { AuthResponse, RegisterUserRequest } from '../models/auth/user.model';
 import { Observable } from 'rxjs';
-import { ConfirmEmailResponse } from '../models/confirm-email-response.model';
+import { ConfirmEmailResponse } from '../models/auth/confirm-email-response.model';
 
 @Injectable({
   providedIn: 'root'
