@@ -9,8 +9,7 @@
       </div>
     </ng-template>
     
-    <!-- <form [formGroup]="loginForm" (ngSubmit)="onSubmit()"> -->
-    <form [formGroup]="loginForm">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <!-- Credenciales de acceso -->
       <div class="grid">
         <div class="col-12 field">
@@ -52,17 +51,17 @@
 
     <!-- Proveedores externos -->
     <div class="social-login">
-      <button pButton type="button" class="p-button-outlined social-button google">
+      <button pButton type="button" class="p-button-outlined social-button google" (click)="loginWithGoogle()">
         <i class="pi pi-google"></i>
         <span>Google</span>
       </button>
       
-      <button pButton type="button" class="p-button-outlined social-button facebook">
+      <button pButton type="button" class="p-button-outlined social-button facebook" (click)="loginWithFacebook()">
         <i class="pi pi-facebook"></i>
         <span>Facebook</span>
       </button>
       
-      <button pButton type="button" class="p-button-outlined social-button twitter">
+      <button pButton type="button" class="p-button-outlined social-button twitter" (click)="loginWithTwitter()">
         <i class="pi pi-twitter"></i>
         <span>Twitter</span>
       </button>

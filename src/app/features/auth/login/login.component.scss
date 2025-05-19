@@ -234,16 +234,18 @@
     }
   }
   
-  /* Social login */
+  /* Social login - MEJORADO PARA RESPONSIVIDAD */
   .social-login {
     display: flex;
     justify-content: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap; /* Permite que los botones se ajusten en dispositivos pequeños */
     
     .social-button {
       flex: 1;
-      max-width: 110px;
+      min-width: 100px; /* Mínimo ancho para que sean utilizables */
+      max-width: 140px; /* Máximo ancho para mantener consistencia */
       border: 1px solid var(--surface-border);
       transition: all 0.2s ease;
       display: flex;
@@ -288,6 +290,8 @@
     color: var(--text-color-secondary);
     gap: 0.5rem;
     margin-top: 0.5rem;
+    flex-wrap: wrap; /* Permite el ajuste en dispositivos pequeños */
+    text-align: center; /* Mejora el centrado en móviles */
     
     a {
       margin-left: 0.5rem;
@@ -295,37 +299,97 @@
   }
 }
 
-/* Responsivo */
+/* Media queries mejorados */
 @media screen and (max-width: 576px) {
   .login-container {
-    margin: 1.5rem auto;
+    margin: 1rem auto;
+    padding: 0 0.75rem;
   }
   
   :host ::ng-deep {
-    .card-header h2 {
-      font-size: 1.2rem;
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      
+      h2 {
+        font-size: 1.2rem;
+      }
     }
     
     .p-card .p-card-content {
       padding: 1.25rem;
     }
     
+    /* Mejora para botones sociales en móvil */
     .social-login {
-      flex-direction: column;
-      align-items: center;
+      flex-direction: row; /* Mantiene la dirección en fila */
+      flex-wrap: wrap; /* Permite que los botones se ajusten */
+      gap: 0.5rem; /* Reduce el espacio entre botones */
       
       .social-button {
-        max-width: 80%;
+        flex: 1 1 30%; /* Hace que los botones ocupen aproximadamente 1/3 del espacio */
+        min-width: 85px; /* Asegura un ancho mínimo funcional */
+        max-width: none; /* Elimina el ancho máximo en móviles */
+        font-size: 0.85rem; /* Reduce ligeramente el tamaño de fuente */
+        padding: 0.5rem 0; /* Reduce el padding vertical */
+        
+        span {
+          font-size: 0.8rem; /* Reduce el tamaño del texto */
+        }
+        
+        .p-button-icon {
+          font-size: 0.9rem; /* Ajusta tamaño de iconos */
+        }
       }
     }
     
+    /* Mejora en el diseño del enlace de registro */
     .register-link {
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.5rem;
+      margin-top: 1rem;
       
       a {
         margin-left: 0;
+        margin-top: 0.25rem;
       }
+    }
+    
+    /* Ajusta el tamaño del texto de olvidar contraseña */
+    .forgot-password {
+      font-size: 0.8rem;
+    }
+    
+    /* Mejora el diseño del botón de inicio de sesión */
+    .login-button {
+      height: 2.75rem !important; /* Reduce altura del botón */
+      font-size: 0.9rem !important; /* Reduce tamaño de fuente */
+    }
+  }
+}
+
+/* Media query adicional para dispositivos muy pequeños */
+@media screen and (max-width: 375px) {
+  :host ::ng-deep {
+    .social-login {
+      flex-direction: column; /* Cambia a columna en dispositivos muy pequeños */
+      
+      .social-button {
+        flex: 1 1 100%; /* Ocupa todo el ancho disponible */
+        max-width: 100%; /* Ocupa todo el ancho */
+      }
+    }
+    
+    /* Reduce espacios en dispositivos muy pequeños */
+    .p-card .p-card-content {
+      padding: 1rem;
+    }
+    
+    .field {
+      margin-bottom: 1.25rem;
+    }
+    
+    .p-divider {
+      margin: 1.25rem 0;
     }
   }
 }
