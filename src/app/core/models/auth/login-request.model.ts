@@ -3,6 +3,15 @@ export interface LoginRequest {
     password: string;
     rememberMe: boolean;
 }
+
+export interface RolData {
+    data: any;
+    errors: string[];
+    mensaje: string;
+    success: boolean;
+    roles: string[];
+}
+
 export interface LoginResponse {
     success: boolean;
     mensaje: string;
@@ -13,4 +22,5 @@ export interface LoginResponse {
     nombres: string;
     apellidos: string;
     errors: string[];
+    rol: RolData;
 }
