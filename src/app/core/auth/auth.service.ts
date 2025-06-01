@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { AuthResponse, RegisterUserRequest } from '../models/auth/user.model';
-import { BehaviorSubject, catchError, Observable, of, timeout } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, timeout } from 'rxjs';
 import {
   LoginRequest,
   LoginResponse,
 } from '../models/auth/login-request.model';
 import { Router } from '@angular/router';
 import { AUTH } from '../../Utils/dictionary.types';
+import { GuardService } from './guard.service';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +21,8 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router    
+    private router: Router,
+    private guardService: GuardService // Inyectar GuardService
   ) {}
 
   // ============================================
@@ -28,9 +30,26 @@ export class AuthService {
   // ============================================
 
   login(loginData: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
-      `${this.apiUrl}/Auth/login`,
-      loginData
+    return this.http.post<LoginResponse>(`${this.apiUrl}/Auth/login`, loginData).pipe(
+      map(response => {
+        if (response.success) {
+          // Extraer roles de la estructura correcta
+          const userRoles = response.rol?.data?.roles || [];
+
+          // Crear objeto de usuario para el GuardService
+          const userData = {
+            userId: response.userId,
+            email: response.email,
+            nombres: response.nombres,
+            apellidos: response.apellidos,
+            roles: userRoles
+          };
+
+          // Actualizar el GuardService con el usuario actual
+          this.guardService.setCurrentUser(userData);
+        }
+        return response;
+      })
     );
   }
 
@@ -46,12 +65,67 @@ export class AuthService {
       `${this.apiUrl}/Auth/confirmar-email?userId=${userId}&token=${token}`
     );
   }
+  
+
+  // ============================================
+  // VERIFICACIONES DE AUTENTICACIÓN
+  // ============================================
+
+  /**
+   * Verifica si se está utilizando LocalStorage
+   * @returns boolean
+   */
+  isLocalStorage(): boolean {
+    return localStorage.getItem('auth_token') !== null;
+  }
+
+  /**
+    * Método para verificar si el usuario está autenticado
+  */
+  isAuthenticated(): boolean {
+    const token = this.isLocalStorage()
+      ? localStorage.getItem('auth_token')
+      : sessionStorage.getItem('auth_token');
+    return !!token;
+  }
+
+  /**
+   * Verifica si el usuario tiene una sesión activa
+   * @returns boolean
+   */
+  hasActiveSession(): boolean {
+    const token = this.getAuthToken();
+    const userData = this.getUserData();
+    return !!(token && userData);
+  }
+  
+  /**
+   * Obtiene los datos del usuario desde LocalStorage o SessionStorage
+   * @returns any
+   */
+  private getUserData(): any {
+    const userData =
+      localStorage.getItem('user_data') || sessionStorage.getItem('user_data');
+    return userData ? JSON.parse(userData) : null;
+  }
+
+
 
   // ============================================
   // GESTIÓN DE ROLES
   // ============================================
 
-  // Método para establecer los roles del usuario - Sesión o LocalStorage
+   /**
+   * Obtener el token de autenticación (ahora público para GuardService)
+   */
+  public getAuthToken(): string | null {
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+  }
+
+  /**
+   * Establece los roles del usuario en LocalStorage o SessionStorage
+   * @param roles Lista de roles del usuario
+   */
   setUserRoles(roles: string[]): void {
     if (this.isLocalStorage()) {
       localStorage.setItem('user_roles', JSON.stringify(roles));
@@ -61,7 +135,10 @@ export class AuthService {
     this.userRolesSubject.next(roles);
   }
 
-  // Obtención de roles del usuario -  Sesión o LocalStorage
+  /**
+   * Obtiene los roles del usuario desde LocalStorage o SessionStorage
+   * @returns string[]
+   */
   getUserRoles(): string[] {
     let roles: string[] = [];
 
@@ -90,19 +167,28 @@ export class AuthService {
     return Array.isArray(roles) ? roles : [];
   }
 
-  // Método para verificar si el usuario tiene un rol específico
+  /** 
+   * Método para verificar si el usuario tiene un rol específico
+   * @param role: El rol a verificar 
+   */
   hasRole(role: string): boolean {
     const roles = this.getUserRoles();
     return roles.includes(role);
   }
 
-  // Método para verificar si el usuario tiene alguno de los roles especificados
+  /**
+   * Método para verificar si el usuario tiene alguno de los roles requeridos
+   * @param requiredRoles: Lista de roles requeridos
+   */ 
   hasAnyRole(requiredRoles: string[]): boolean {
     const userRoles = this.getUserRoles();
     return requiredRoles.some((role) => userRoles.includes(role));
   }
 
-  // Método para obtener el rol principal (con mayor jerarquía)
+  /**
+   * Método para verificar si el usuario tiene todos los roles requeridos
+   * @param requiredRoles: Lista de roles requeridos
+   */
   getPrimaryRole(): string | null {
     const roleHierarchy = [
       AUTH.ROLES.ADMIN,
@@ -119,6 +205,8 @@ export class AuthService {
     return userRoles.length > 0 ? userRoles[0] : null;
   }
 
+
+
   // ============================================
   // REDIRECCIÓN BASADA EN ROLES
   // ============================================
@@ -128,22 +216,28 @@ export class AuthService {
    * @param roles Lista de roles del usuario
   */
   redirectBasedOnUserRoles(roles: string[]) {
-
     // Verificar que roles no esté vacío
     if (!roles || roles.length === 0) {
       console.log('⚠️ No hay roles, redirigiendo a dashboard por defecto');
-      this.router.navigate(['/dashboard']); // Ruta por defecto
+      this.router.navigate(['/dashboard']);
       return;
     }
 
-    // Definir jerarquía de roles (del más importante al menos importante)
+    // Verificar si hay una URL de redirección pendiente
+    const redirectUrl = this.guardService.getAndClearRedirectUrl();
+    if (redirectUrl) {
+      console.log('➡️ Redirigiendo a URL pendiente:', redirectUrl);
+      this.router.navigate([redirectUrl]);
+      return;
+    }
+
+    // Definir jerarquía de roles (código existente)
     const roleHierarchy = [
-      AUTH.ROLES.ADMIN,      // "Admin"
-      AUTH.ROLES.MODERATOR,  // "Moderator"
-      AUTH.ROLES.USER,       // "User"
+      AUTH.ROLES.ADMIN,
+      AUTH.ROLES.MODERATOR,
+      AUTH.ROLES.USER,
     ];
 
-    // Encontrar el rol con mayor jerarquía
     let primaryRole = null;
     for (const hierarchyRole of roleHierarchy) {
       if (roles.includes(hierarchyRole)) {
@@ -152,68 +246,29 @@ export class AuthService {
       }
     }
 
-    // Redirigir según el rol principal
+    // Redirigir según el rol principal (código existente)
     switch (primaryRole) {
-      case AUTH.ROLES.ADMIN: // "Admin"
+      case AUTH.ROLES.ADMIN:
         console.log('➡️ Redirigiendo a admin dashboard');
         this.router.navigate(['/admin/dashboard']);
         break;
-      case AUTH.ROLES.MODERATOR: // "Moderator"
+      case AUTH.ROLES.MODERATOR:
         console.log('➡️ Redirigiendo a moderator dashboard');
         this.router.navigate(['/moderator/dashboard']);
         break;
-      case AUTH.ROLES.USER: // "User"
+      case AUTH.ROLES.USER:
         console.log('➡️ Redirigiendo a user dashboard');
         this.router.navigate(['/user/dashboard']);
         break;
       default:
-        // Redirección por defecto si no se encuentra un rol válido
         console.log('⚠️ Roles no reconocidos:', roles, 'redirigiendo a dashboard por defecto');
         this.router.navigate(['/dashboard']);
         break;
     }
-  } 
-
-  // ============================================
-  // VERIFICACIONES DE AUTENTICACIÓN
-  // ============================================
-
-  // Verificar si se está usando localStorage (recordarme activado)
-  isLocalStorage(): boolean {
-    return localStorage.getItem('auth_token') !== null;
   }
 
-  /**
-    * Método para verificar si el usuario está autenticado
-  */
-  isAuthenticated(): boolean {
-    const token = this.isLocalStorage()
-      ? localStorage.getItem('auth_token')
-      : sessionStorage.getItem('auth_token');
-    return !!token;
-  }
 
-  // Verificar si hay una sesión activa
-  hasActiveSession(): boolean {
-    const token = this.getAuthToken();
-    const userData = this.getUserData();
-    return !!(token && userData);
-  }
-
-  // Obtener el token de autenticación
-  private getAuthToken(): string | null {
-    return (
-      localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
-    );
-  }
-
-  // Obtener datos del usuario
-  private getUserData(): any {
-    const userData =
-      localStorage.getItem('user_data') || sessionStorage.getItem('user_data');
-    return userData ? JSON.parse(userData) : null;
-  }
-
+ 
   // ============================================
   // SISTEMA DE LOGOUT
   // ============================================
@@ -273,6 +328,10 @@ export class AuthService {
       sessionStorageKeys.forEach((key) => sessionStorage.removeItem(key));
 
       this.userRolesSubject.next([]);
+      
+      // Limpiar también el GuardService
+      this.guardService.clearCurrentUser();
+      
       console.log('Datos locales limpiados exitosamente');
     } catch (error) {
       console.error('Error al limpiar datos locales:', error);
@@ -307,4 +366,44 @@ export class AuthService {
     this.cleanLocalData();
     this.redirectToLogin({ emergency: 'true' });
   }
+
+
+
+  // ============================================
+  // MÉTODOS NUEVOS PARA INTEGRACIÓN
+  // ============================================
+
+  /**
+   * Inicializar el estado del usuario al cargar la aplicación
+   * Llamar desde app.component.ts o main.ts
+   */
+  public initializeUserSession(): void {
+    if (this.isAuthenticated()) {
+      const userData = this.getUserDataFromStorage();
+      if (userData) {
+        this.guardService.setCurrentUser(userData);
+        this.setUserRoles(userData.roles || []);
+      }
+    }
+  }
+
+  /**
+   * Obtener datos del usuario desde storage (ahora público)
+   */
+  public getUserDataFromStorage(): any {
+    const userData = localStorage.getItem('user_data') || sessionStorage.getItem('user_data');
+    return userData ? JSON.parse(userData) : null;
+  }
+
+  /**
+   * Verificar si el usuario puede acceder a una ruta específica
+   */
+  public canAccessRoute(route: string, requiredRoles?: string[]): Observable<boolean> {
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return this.guardService.isAuthenticated();
+    }
+    return this.guardService.hasAnyRole(requiredRoles);
+  }
+
+
 }
