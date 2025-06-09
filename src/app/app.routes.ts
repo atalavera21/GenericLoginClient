@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authRoutes } from './features/auth/auth.routes';
-import { authGuard } from './core/guards/auth.guard';
+import { adminGuard, authGuard, guestGuard, userGuard } from './core/guards/auth.guard';
+
 
 export const routes: Routes = [
   {
@@ -9,21 +10,40 @@ export const routes: Routes = [
   },
   {
     path: 'auth',
+     canActivate: [guestGuard], // 👻 Solo si NO está logueado
     loadChildren: () => import('./features/auth/auth.routes').then(routes => routes.authRoutes)
-    // No necesita guard - son rutas públicas (login, registro)
+
   },
   {
     path: 'admin',
-    canActivate: [authGuard], // 🔒 Protegida - requiere autenticación
+     canActivate: [adminGuard], // 👨‍💼 Solo usuarios con rol 'Admin'
     loadChildren: () => import('./features/admin/admin.routes').then(routes => routes.ADMIN_ROUTES)
   },
   {
     path: 'user', 
-    canActivate: [authGuard], // 🔒 Protegida - requiere autenticación
+    canActivate: [userGuard], // 👤 Solo usuarios con rol 'Usuario'
     loadChildren: () => import('./features/user/user.routes').then(routes => routes.USER_ROUTES)
+  },
+  {
+    path: 'unauthorized',
+    loadComponent: () => import('./shared/Pages/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
   },
   {
     path: '**',
     redirectTo: ''
-  }
+  },
+
+  // ============================================
+  // RUTAS ADICIONALES PROTEGIDAS (Opcional)
+  // ============================================
+  {
+    path: 'profile',
+    canActivate: [authGuard], // 🔐 Cualquier usuario autenticado
+    // loadComponent: () => import('./shared/components/profile/profile.component').then(m => m.ProfileComponent)
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard], // 🔐 Cualquier usuario autenticado  
+    // loadComponent: () => import('./shared/components/settings/settings.component').then(m => m.SettingsComponent)
+  },
 ];

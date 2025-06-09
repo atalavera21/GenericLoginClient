@@ -29,7 +29,6 @@ import {
   LoginRequest,
   LoginResponse,
 } from '../../../core/models/auth/login-request.model';
-import { GuardService } from '../../../core/auth/guard.service';
 
 @Component({
   selector: 'app-login',
@@ -61,7 +60,6 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private guardService: GuardService,
     private router: Router,
     private messageService: MessageService,
     public loadingService: LoadingService,
@@ -78,255 +76,84 @@ export class LoginComponent implements OnInit {
 
   // Modificación en el método onSubmit de LoginComponent
   onSubmit() {
-  if (this.loginForm.invalid) {
-    this.loginForm.markAllAsTouched(); 
-    return;
-  }
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
 
-  const loginData: LoginRequest = {
-    email: this.loginForm.get('email')?.value,
-    password: this.loginForm.get('contrasena')?.value,
-    rememberMe: this.loginForm.get('rememberMe')?.value || false
-  };
-
-  this.loadingService.show();
-
-  this.authService.login(loginData).subscribe({
-    next: (response: LoginResponse) => {
-      
-      this.loadingService.hide();
-
-      if (response.success) {
-
-        // Extraer roles de la estructura correcta
-        const userRoles = response.rol?.data?.roles || [];       
-
-        //  Guardado de usuario
-        const userData = {
-          userId: response.userId,
-          email: response.email,
-          nombres: response.nombres,
-          apellidos: response.apellidos,
-          roles: userRoles 
-        };      
-
-        // Guardar el token en localStorage o sessionStorage según recordarme
-        if (loginData.rememberMe) {
-          localStorage.setItem('auth_token', response.token);
-          localStorage.setItem('user_data', JSON.stringify(userData));
-        } else {
-          sessionStorage.setItem('auth_token', response.token);
-          sessionStorage.setItem('user_data', JSON.stringify(userData));
-        }
-
-        // ✅ Actualizar GuardService con el usuario actual
-        this.guardService.setCurrentUser(userData);
-
-        // Establecer los roles usando la variable correcta
-        this.authService.setUserRoles(userRoles);
-        
-        // Mostrar mensaje de éxito
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Inicio de sesión exitoso',
-          detail: `Bienvenido, ${response.nombres}!`,
-        });
-
-        // Redirigir usando la variable con los roles correctos
-        setTimeout(() => {
-          this.authService.redirectBasedOnUserRoles(userRoles);
-        }, 1500);
-
-      } else {
-        // Si la API devuelve success: false pero no es un error HTTP
-        this.handleLoginErrors(response.errors || [response.mensaje]);
-      }
-    },
-    error: (error) => {
-      this.loadingService.hide();
-
-      if (
-        error.error &&
-        error.error.errors &&
-        error.error.errors.length > 0
-      ) {
-        // Solo mostrar los errores del array
-        this.handleLoginErrors(error.error.errors);
-      } else if (error.error && error.error.mensaje) {
-        // Si no hay errores en el array, mostrar el mensaje general
-        this.handleLoginErrors([error.error.mensaje]);
-      } else {
-        // Error genérico
-        this.handleLoginErrors([
-          'Ocurrió un error al iniciar sesión. Intenta nuevamente.',
-        ]);
-      }
-    },
-  });
-}
-
-  /**
-   * ✅ Logout con confirmación
-   */
-  onLogout(): void {
-    this.confirmationService.confirm({
-      message: '¿Estás seguro de que deseas cerrar sesión?',
-      header: 'Confirmar cierre de sesión',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, cerrar sesión',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectButtonStyleClass: 'p-button-secondary',
-      accept: () => {
-        this.performLogout();
-      },
-      reject: () => {
-        console.log('Cierre de sesión cancelado por el usuario');
-      },
-    });
-  }
-
-  /**
-   * ✅ Logout rápido sin confirmación
-   */
-  onQuickLogout(): void {
-    this.authService.logout();
-    this.showMessage(
-      'info',
-      'Sesión cerrada',
-      'Has cerrado sesión correctamente'
-    );
-  }
-
-  /**
-   * ✅ Logout de emergencia
-   */
-  onEmergencyLogout(): void {
-    this.authService.emergencyLogout();
-    this.showMessage(
-      'warn',
-      'Sesión cerrada',
-      'Sesión cerrada por motivos de seguridad'
-    );
-  }
-
-  // ============================================
-  // MÉTODOS PRIVADOS
-  // ============================================
-
-  /**
-   * Maneja login exitoso
-   */
-  private handleSuccessfulLogin(
-    response: LoginResponse,
-    rememberMe: boolean
-  ): void {
-    const userData = {
-      userId: response.userId,
-      email: response.email,
-      nombres: response.nombres,
-      apellidos: response.apellidos,
-      roles: response.rol?.roles || [],
+    const loginData: LoginRequest = {
+      email: this.loginForm.get('email')?.value,
+      password: this.loginForm.get('contrasena')?.value,
+      rememberMe: this.loginForm.get('recordarme')?.value || false,
     };
 
-    // Guardar según "recordarme"
-    if (rememberMe) {
-      localStorage.setItem('auth_token', response.token);
-      localStorage.setItem('user_data', JSON.stringify(userData));
-    } else {
-      sessionStorage.setItem('auth_token', response.token);
-      sessionStorage.setItem('user_data', JSON.stringify(userData));
-    }
+    this.loadingService.show();
 
-    this.authService.setUserRoles(response.rol?.roles || []);
+    this.authService.login(loginData).subscribe({
+      next: (response: LoginResponse) => {
+        this.loadingService.hide();
 
-    this.showMessage(
-      'success',
-      'Inicio de sesión exitoso',
-      `Bienvenido, ${response.nombres}!`
-    );
+        if (response.success) {
+          // ✅ El AuthService ya maneja todo: guardado, estado y redirección
+          this.showMessage(
+            'success',
+            'Inicio de sesión exitoso',
+            `Bienvenido, ${response.nombres}!`
+          );
 
-    setTimeout(() => {
-      this.authService.redirectBasedOnUserRoles(response.rol?.roles || []);
-    }, 1500);
-  }
-
-  /**
-   * ✅ Ejecuta logout completo con llamada al servidor
-   */
-  private performLogout(): void {
-    this.showMessage(
-      'info',
-      'Cerrando sesión...',
-      'Por favor espera mientras procesamos tu solicitud'
-    );
-
-    this.authService.logoutFromServer().subscribe({
-      next: (response) => {
-        console.log('Logout exitoso del servidor:', response);
-        this.showMessage(
-          'success',
-          'Sesión cerrada',
-          'Sesión cerrada exitosamente'
-        );
-        this.authService.cleanLocalData();
-        this.authService.redirectToLogin();
+          // El AuthService ya redirige automáticamente después de 1.5 segundos
+          // No necesitas hacer nada más aquí
+        } else {
+          // Manejar errores de respuesta
+          this.handleLoginErrors(response.errors || [response.mensaje]);
+        }
       },
       error: (error) => {
-        console.error('Error en logout del servidor:', error);
-        this.handleLogoutError(error);
-        // Aún así, limpiar datos locales por seguridad
-        this.authService.cleanLocalData();
-        this.authService.redirectToLogin();
+        this.loadingService.hide();
+        this.handleHttpError(error);
       },
     });
   }
 
   /**
-   * Maneja errores de login
+   * Maneja errores HTTP del login
+   * @param error Error recibido del servidor
+   */
+  private handleHttpError(error: any): void {
+    let errorMessages: string[] = [];
+
+    if (error.error?.errors?.length > 0) {
+      errorMessages = error.error.errors;
+    } else if (error.error?.mensaje) {
+      errorMessages = [error.error.mensaje];
+    } else if (error.message) {
+      errorMessages = [error.message];
+    } else {
+      errorMessages = [
+        'Ocurrió un error al iniciar sesión. Intenta nuevamente.',
+      ];
+    }
+
+    this.handleLoginErrors(errorMessages);
+  }
+
+
+    /**
+   * Muestra mensajes de error de login
+   * @param errors Array de mensajes de error
    */
   private handleLoginErrors(errors: string[]): void {
-    errors.forEach((err: string) => {
-      this.showMessage('error', 'Error de inicio de sesión', err);
+    errors.forEach((error: string) => {
+      this.showMessage('error', 'Error de inicio de sesión', error);
     });
   }
 
   /**
-   * Maneja errores HTTP
-   */
-  private handleHttpError(error: any): void {
-    if (error.error?.errors?.length > 0) {
-      this.handleLoginErrors(error.error.errors);
-    } else if (error.error?.mensaje) {
-      this.handleLoginErrors([error.error.mensaje]);
-    } else {
-      this.handleLoginErrors([
-        'Ocurrió un error al iniciar sesión. Intenta nuevamente.',
-      ]);
-    }
-  }
-
-  /**
-   * ✅ Maneja errores de logout
-   */
-  private handleLogoutError(error: any): void {
-    let errorMessage = 'Error al cerrar sesión en el servidor';
-
-    if (error?.error?.message) {
-      errorMessage = error.error.message;
-    } else if (error?.message) {
-      errorMessage = error.message;
-    }
-
-    this.showMessage(
-      'warn',
-      'Advertencia',
-      `${errorMessage}. Tu sesión local ha sido cerrada por seguridad.`
-    );
-  }
-
-  /**
-   * ✅ Método helper para mostrar mensajes
+   * Método helper para mostrar mensajes
+   * @param severity Tipo de mensaje (success, error, info, warn)
+   * @param summary Título del mensaje
+   * @param detail Detalle del mensaje
+   * @param life Duración en milisegundos
    */
   private showMessage(
     severity: string,
@@ -342,28 +169,50 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  
+
+
+
+
+
+
+
+
+
+
+
+
   // ============================================
-  // SOCIAL LOGIN
+  // SOCIAL LOGIN (PLACEHOLDERS)
   // ============================================
 
   /**
-   * Métodos para iniciar sesión con proveedores externos
+   * Login con Google (implementar según necesidad)
    */
-
-  loginWithGoogle() {
-    // Implementar la lógica para iniciar sesión con Google
-    // Por ejemplo:
-    // this.authService.loginWithGoogle().subscribe({...});
+  loginWithGoogle(): void {
     console.log('Login with Google clicked');
+    // Implementar lógica de Google OAuth
+    this.showMessage('info', 'Google Login', 'Funcionalidad en desarrollo');
   }
 
-  loginWithFacebook() {
-    // Implementar la lógica para iniciar sesión con Facebook
+  /**
+   * Login con Facebook (implementar según necesidad)
+   */
+  loginWithFacebook(): void {
     console.log('Login with Facebook clicked');
+    // Implementar lógica de Facebook OAuth
+    this.showMessage('info', 'Facebook Login', 'Funcionalidad en desarrollo');
   }
 
-  loginWithTwitter() {
-    // Implementar la lógica para iniciar sesión con Twitter
+  /**
+   * Login con Twitter (implementar según necesidad)
+   */
+  loginWithTwitter(): void {
     console.log('Login with Twitter clicked');
+    // Implementar lógica de Twitter OAuth
+    this.showMessage('info', 'Twitter Login', 'Funcionalidad en desarrollo');
   }
+
+
+
 }

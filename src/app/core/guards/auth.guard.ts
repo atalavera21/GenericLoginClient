@@ -1,142 +1,151 @@
-import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../auth/auth.service';
-import { map, take } from 'rxjs';
-import { GuardService } from '../auth/guard.service';
-
-
-// ============================================
-// AUTH GUARD - Actualizado con GuardService
-// ============================================
+import { TokenService } from '../auth/token.service';
+import { inject } from '@angular/core';
+import { SessionService } from '../auth/session.service';
 
 /**
- * Guard que protege rutas requiriendo autenticación
- * Redirige al login si el usuario no está autenticado
+ * 🛡️ AuthGuard
+ * Guard funcional para proteger rutas que requieren autenticación
+ * Valida token, datos de usuario y redirige a login si es necesario
+ *
+ * Guard básico para proteger cualquier ruta que requiera estar logueado
+ * USO: Aplicar a rutas que necesitan usuario autenticado (sin importar rol)
+ *
  */
 export const authGuard: CanActivateFn = (route, state) => {
-  const guardService = inject(GuardService);
+  const sessionService = inject(SessionService);
   const router = inject(Router);
 
-  return guardService.isAuthenticated().pipe(
-    take(1),
-    map(isAuth => {
-      if (isAuth) {
-        return true;
-      } else {
-        guardService.setRedirectUrl(state.url);
-        router.navigate(['/auth/login']);
-        return false;
-      }
-    })
-  );
+  console.log('🔐 AuthGuard: Verificando autenticación...');
+
+  if (!sessionService.hasValidSession()) {
+    console.log('❌ Sesión inválida - Redirigiendo a login');
+    router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url },
+    });
+    return false;
+  }
+
+  console.log('✅ Usuario autenticado correctamente');
+  return true;
+
+  return true;
 };
 
-
-// ============================================
-// ROLE GUARD - Actualizado con GuardService
-// ============================================
-
 /**
- * Guard que protege rutas basándose en roles específicos
+ * 🎭 RoleGuard
+ * Guard para proteger rutas por rol específico usando route.data
+ * USO: Cuando se necesita un rol específico definido en route.data['requiredRole']
  */
-export const roleGuard = (allowedRoles: string | string[]): CanActivateFn => {
-  return (route, state) => {
-    const guardService = inject(GuardService);
-    const router = inject(Router);
+export const roleGuard: CanActivateFn = (route, state) => {
+  const sessionService = inject(SessionService);
+  const router = inject(Router);
 
-    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  const requiredRole = route.data?.['requiredRole'] as string;
 
-    return guardService.getCurrentUser().pipe(
-      take(1),
-      map(user => {
-        if (!user) {
-          guardService.setRedirectUrl(state.url);
-          router.navigate(['/auth/login']);
-          return false;
-        }
+  if (!requiredRole) {
+    console.error('❌ RoleGuard: Falta requiredRole en route.data');
+    return false;
+  }
 
-        const hasPermission = roles.some(role => user.roles.includes(role));
+  console.log(`🎭 RoleGuard: Verificando rol "${requiredRole}"`);
 
-        if (hasPermission) {
-          return true;
-        } else {
-          // Redirigir al área correcta según su rol
-          guardService.redirectToUserArea(user.roles);
-          return false;
-        }
-      })
+  // Verificar autenticación primero
+  if (!sessionService.hasValidSession()) {
+    router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url },
+    });
+    return false;
+  }
+
+  // Verificar rol específico
+  if (!sessionService.hasRole(requiredRole)) {
+    const sessionInfo = sessionService.getSessionInfo();
+    console.log(
+      `❌ Sin rol "${requiredRole}" - Tiene: [${sessionInfo.roles.join(', ')}]`
     );
-  };
+    router.navigate(['/unauthorized']);
+    return false;
+  }
+
+  console.log(`✅ Acceso concedido para rol "${requiredRole}"`);
+  return true;
 };
 
-
-// ============================================
-// GUEST GUARD - Actualizado con GuardService
-// ============================================
-
 /**
- * Guard para rutas que solo deben ser accesibles para usuarios NO autenticados
- */
-export const guestGuard: CanActivateFn = (route, state) => {
-  const guardService = inject(GuardService);
-
-  return guardService.getCurrentUser().pipe(
-    take(1),
-    map(user => {
-      if (!user) {
-        return true; // No está autenticado, puede acceder
-      } else {
-        // Ya está autenticado, redirigir según su rol
-        guardService.redirectToUserArea(user.roles);
-        return false;
-      }
-    })
-  );
-};
-
-
-// ============================================
-// GUARDS ESPECÍFICOS ADICIONALES
-// ============================================
-
-/**
- * Guard específico para administradores
+ * 👨‍💼 AdminGuard
+ * Guard específico para rutas exclusivas de administradores
+ * USO: Aplicar directamente a rutas /admin sin necesidad de route.data
  */
 export const adminGuard: CanActivateFn = (route, state) => {
-  const guardService = inject(GuardService);
+  const sessionService = inject(SessionService);
   const router = inject(Router);
 
-  return guardService.isAdmin().pipe(
-    take(1),
-    map(isAdmin => {
-      if (isAdmin) {
-        return true;
-      } else {
-        guardService.setRedirectUrl(state.url);
-        router.navigate(['/unauthorized']);
-        return false;
-      }
-    })
-  );
+  console.log('👨‍💼 AdminGuard: Verificando acceso admin');
+
+  if (!sessionService.hasValidSession()) {
+    router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url },
+    });
+    return false;
+  }
+
+  if (!sessionService.hasRole('Admin')) {
+    console.log('❌ Acceso denegado: Requiere rol Admin');
+    router.navigate(['/unauthorized']);
+    return false;
+  }
+
+  console.log('✅ Acceso admin concedido');
+  return true;
 };
 
 /**
- * Guard específico para moderadores y administradores
+ * 👤 UserGuard
+ * Guard específico para rutas exclusivas de usuarios regulares
+ * USO: Aplicar directamente a rutas /user sin necesidad de route.data
  */
-export const moderatorGuard: CanActivateFn = (route, state) => {
-  const guardService = inject(GuardService);
+export const userGuard: CanActivateFn = (route, state) => {
+  const sessionService = inject(SessionService);
   const router = inject(Router);
 
-  return guardService.hasAnyRole(['Admin', 'Moderator']).pipe(
-    take(1),
-    map(hasRole => {
-      if (hasRole) {
-        return true;
-      } else {
-        guardService.setRedirectUrl(state.url);
-        router.navigate(['/unauthorized']);
-        return false;
-      }
-    })
-  );
+  console.log('👤 UserGuard: Verificando acceso usuario');
+
+  if (!sessionService.hasValidSession()) {
+    router.navigate(['/auth/login'], { 
+      queryParams: { returnUrl: state.url } 
+    });
+    return false;
+  }
+
+  if (!sessionService.hasRole('Usuario')) {
+    console.log('❌ Acceso denegado: Requiere rol Usuario');
+    router.navigate(['/unauthorized']);
+    return false;
+  }
+
+  console.log('✅ Acceso usuario concedido');
+  return true;
+};
+
+/**
+ * 👻 GuestGuard
+ * Guard para rutas que solo deben ser accesibles cuando NO estás logueado
+ * USO: Aplicar a /auth/login, /auth/register para evitar acceso si ya está logueado
+ */
+export const guestGuard: CanActivateFn = (route, state) => {
+  const sessionService = inject(SessionService);
+  const router = inject(Router);
+
+  console.log('👻 GuestGuard: Verificando usuario no autenticado');
+
+  if (sessionService.hasValidSession()) {
+    console.log('⚠️ Usuario ya autenticado - Redirigiendo a dashboard');
+    const dashboardRoute = sessionService.getDashboardRoute();
+    router.navigate([dashboardRoute]);
+    return false;
+  }
+
+  console.log('✅ Usuario no autenticado - Acceso permitido');
+  return true;
 };

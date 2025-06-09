@@ -2,289 +2,231 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { AuthResponse, RegisterUserRequest } from '../models/auth/user.model';
-import { BehaviorSubject, catchError, map, Observable, of, timeout } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, throwError, timeout } from 'rxjs';
 import {
   LoginRequest,
   LoginResponse,
 } from '../models/auth/login-request.model';
 import { Router } from '@angular/router';
 import { AUTH } from '../../Utils/dictionary.types';
-import { GuardService } from './guard.service';
+import { SessionService } from './session.service';
+import { RoleService } from './role.service';
 
+
+/**
+ * 🔐 AuthService
+ * 
+ * Servicio de autenticación que proporciona:
+ * - Inicio y cierre de sesión de usuarios
+ * - Registro de nuevos usuarios
+ * - Recuperación y restablecimiento de contraseñas
+ * - Confirmación de email
+ * - Verificación de estado de autenticación
+ * - Gestión de roles y permisos de usuario
+ * - Redirección automática según el perfil del usuario
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
+  
+  // Estado reactivo para roles (para componentes que lo necesiten)
   private userRolesSubject = new BehaviorSubject<string[]>([]);
   public userRoles$ = this.userRolesSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    private guardService: GuardService // Inyectar GuardService
-  ) {}
+    private sessionService: SessionService,
+    private roleService: RoleService
+  ) {
+    this.initializeUserState();
+  }
 
   // ============================================
-  // MÉTODOS DE AUTENTICACIÓN EXISTENTES
+  // INICIALIZACIÓN
   // ============================================
 
+  /**
+   * Inicializa el estado del usuario al cargar la aplicación
+   */
+  private initializeUserState(): void {
+    if (this.sessionService.initializeSession()) {
+      const sessionInfo = this.sessionService.getSessionInfo();
+      this.userRolesSubject.next(sessionInfo.roles);
+    }
+  }
+
+  // ============================================
+  // AUTENTICACIÓN HTTP
+  // ============================================
+
+  /**
+   * Realiza login del usuario
+   * @param loginData Credenciales de login
+   * @returns Observable con respuesta del servidor
+   */
   login(loginData: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/Auth/login`, loginData).pipe(
       map(response => {
         if (response.success) {
-          // Extraer roles de la estructura correcta
-          const userRoles = response.rol?.data?.roles || [];
-
-          // Crear objeto de usuario para el GuardService
-          const userData = {
-            userId: response.userId,
-            email: response.email,
-            nombres: response.nombres,
-            apellidos: response.apellidos,
-            roles: userRoles
-          };
-
-          // Actualizar el GuardService con el usuario actual
-          this.guardService.setCurrentUser(userData);
+          this.handleSuccessfulLogin(response, loginData.rememberMe);
         }
         return response;
-      })
+      }),
+      catchError(this.handleAuthError.bind(this))
     );
   }
 
+  /**
+   * Registra un nuevo usuario
+   * @param registerData Datos de registro
+   * @returns Observable con respuesta del servidor
+   */
   register(registerData: RegisterUserRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(
-      `${this.apiUrl}/Auth/registrar`,
-      registerData
+    return this.http.post<AuthResponse>(`${this.apiUrl}/Auth/registrar`, registerData).pipe(
+      catchError(this.handleAuthError.bind(this))
     );
   }
 
+  /**
+   * Confirma email del usuario
+   * @param userId ID del usuario
+   * @param token Token de confirmación
+   * @returns Observable con respuesta del servidor
+   */
   confirmarEmail(userId: string, token: string): Observable<any> {
-    return this.http.get(
-      `${this.apiUrl}/Auth/confirmar-email?userId=${userId}&token=${token}`
+    return this.http.get(`${this.apiUrl}/Auth/confirmar-email?userId=${userId}&token=${token}`).pipe(
+      catchError(this.handleAuthError.bind(this))
     );
   }
-  
+
+  /**
+   * Solicita recuperación de contraseña
+   * @param email Email del usuario
+   * @returns Observable con respuesta del servidor
+   */
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Auth/forgot-password`, { email }).pipe(
+      catchError(this.handleAuthError.bind(this))
+    );
+  }
+
+  /**
+   * Restablece contraseña con token
+   * @param token Token de restablecimiento
+   * @param newPassword Nueva contraseña
+   * @returns Observable con respuesta del servidor
+   */
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Auth/reset-password`, { 
+      token, 
+      newPassword 
+    }).pipe(
+      catchError(this.handleAuthError.bind(this))
+    );
+  }
 
   // ============================================
-  // VERIFICACIONES DE AUTENTICACIÓN
-  // ============================================
-
-  /**
-   * Verifica si se está utilizando LocalStorage
-   * @returns boolean
-   */
-  isLocalStorage(): boolean {
-    return localStorage.getItem('auth_token') !== null;
-  }
-
-  /**
-    * Método para verificar si el usuario está autenticado
-  */
-  isAuthenticated(): boolean {
-    const token = this.isLocalStorage()
-      ? localStorage.getItem('auth_token')
-      : sessionStorage.getItem('auth_token');
-    return !!token;
-  }
-
-  /**
-   * Verifica si el usuario tiene una sesión activa
-   * @returns boolean
-   */
-  hasActiveSession(): boolean {
-    const token = this.getAuthToken();
-    const userData = this.getUserData();
-    return !!(token && userData);
-  }
-  
-  /**
-   * Obtiene los datos del usuario desde LocalStorage o SessionStorage
-   * @returns any
-   */
-  private getUserData(): any {
-    const userData =
-      localStorage.getItem('user_data') || sessionStorage.getItem('user_data');
-    return userData ? JSON.parse(userData) : null;
-  }
-
-
-
-  // ============================================
-  // GESTIÓN DE ROLES
-  // ============================================
-
-   /**
-   * Obtener el token de autenticación (ahora público para GuardService)
-   */
-  public getAuthToken(): string | null {
-    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-  }
-
-  /**
-   * Establece los roles del usuario en LocalStorage o SessionStorage
-   * @param roles Lista de roles del usuario
-   */
-  setUserRoles(roles: string[]): void {
-    if (this.isLocalStorage()) {
-      localStorage.setItem('user_roles', JSON.stringify(roles));
-    } else {
-      sessionStorage.setItem('user_roles', JSON.stringify(roles));
-    }
-    this.userRolesSubject.next(roles);
-  }
-
-  /**
-   * Obtiene los roles del usuario desde LocalStorage o SessionStorage
-   * @returns string[]
-   */
-  getUserRoles(): string[] {
-    let roles: string[] = [];
-
-    if (this.isLocalStorage()) {
-      const storedRoles = localStorage.getItem('user_roles');
-      if (storedRoles) {
-        try {
-          roles = JSON.parse(storedRoles);
-        } catch (error) {
-          console.error('Error parsing user roles from localStorage:', error);
-          roles = [];
-        }
-      }
-    } else {
-      const storedRoles = sessionStorage.getItem('user_roles');
-      if (storedRoles) {
-        try {
-          roles = JSON.parse(storedRoles);
-        } catch (error) {
-          console.error('Error parsing user roles from sessionStorage:', error);
-          roles = [];
-        }
-      }
-    }
-
-    return Array.isArray(roles) ? roles : [];
-  }
-
-  /** 
-   * Método para verificar si el usuario tiene un rol específico
-   * @param role: El rol a verificar 
-   */
-  hasRole(role: string): boolean {
-    const roles = this.getUserRoles();
-    return roles.includes(role);
-  }
-
-  /**
-   * Método para verificar si el usuario tiene alguno de los roles requeridos
-   * @param requiredRoles: Lista de roles requeridos
-   */ 
-  hasAnyRole(requiredRoles: string[]): boolean {
-    const userRoles = this.getUserRoles();
-    return requiredRoles.some((role) => userRoles.includes(role));
-  }
-
-  /**
-   * Método para verificar si el usuario tiene todos los roles requeridos
-   * @param requiredRoles: Lista de roles requeridos
-   */
-  getPrimaryRole(): string | null {
-    const roleHierarchy = [
-      AUTH.ROLES.ADMIN,
-      AUTH.ROLES.MODERATOR,
-      AUTH.ROLES.USER,
-    ];
-    const userRoles = this.getUserRoles();
-
-    for (const hierarchyRole of roleHierarchy) {
-      if (userRoles.includes(hierarchyRole)) {
-        return hierarchyRole;
-      }
-    }
-    return userRoles.length > 0 ? userRoles[0] : null;
-  }
-
-
-
-  // ============================================
-  // REDIRECCIÓN BASADA EN ROLES
+  // GESTIÓN DE SESIÓN
   // ============================================
 
   /**
-   * Redirige al usuario según sus roles
-   * @param roles Lista de roles del usuario
-  */
-  redirectBasedOnUserRoles(roles: string[]) {
-    // Verificar que roles no esté vacío
+   * Maneja login exitoso: guarda sesión y redirige
+   * @param response Respuesta exitosa del servidor
+   * @param rememberMe Preferencia de persistencia
+   */
+  private handleSuccessfulLogin(response: LoginResponse, rememberMe: boolean): void {
+    // Extraer roles (maneja diferentes estructuras de respuesta)
+    const userRoles = response.rol?.data?.roles || response.rol?.roles || [];
+    
+    const userData = {
+      userId: response.userId,
+      email: response.email,
+      nombres: response.nombres,
+      apellidos: response.apellidos,
+      roles: userRoles
+    };
+
+    // Guardar sesión completa
+    this.sessionService.saveSession(response.token, userData, rememberMe);
+    
+    // Actualizar estado reactivo
+    this.userRolesSubject.next(userRoles);
+
+    console.log('✅ Login exitoso:', {
+      user: `${response.nombres} ${response.apellidos}`,
+      roles: userRoles,
+      rememberMe
+    });
+
+    // Redirigir automáticamente después de un delay
+    setTimeout(() => {
+      this.redirectToDashboard();
+    }, 1500);
+  }
+
+  /**
+   * Redirige al dashboard apropiado según el rol del usuario
+   */
+  redirectToDashboard(): void {
+    const dashboardRoute = this.sessionService.getDashboardRoute();
+    console.log(`➡️ Redirigiendo a: ${dashboardRoute}`);
+    this.router.navigate([dashboardRoute]);
+  }
+
+  /**
+   * Redirige basado en roles específicos (método legacy para compatibilidad)
+   * @param roles Array de roles del usuario
+   */
+  redirectBasedOnUserRoles(roles: string[]): void {
     if (!roles || roles.length === 0) {
-      console.log('⚠️ No hay roles, redirigiendo a dashboard por defecto');
-      this.router.navigate(['/dashboard']);
+      console.log('⚠️ No hay roles, redirigiendo a home');
+      this.router.navigate(['/']);
       return;
     }
 
-    // Verificar si hay una URL de redirección pendiente
-    const redirectUrl = this.guardService.getAndClearRedirectUrl();
-    if (redirectUrl) {
-      console.log('➡️ Redirigiendo a URL pendiente:', redirectUrl);
-      this.router.navigate([redirectUrl]);
-      return;
-    }
-
-    // Definir jerarquía de roles (código existente)
-    const roleHierarchy = [
-      AUTH.ROLES.ADMIN,
-      AUTH.ROLES.MODERATOR,
-      AUTH.ROLES.USER,
-    ];
-
-    let primaryRole = null;
-    for (const hierarchyRole of roleHierarchy) {
-      if (roles.includes(hierarchyRole)) {
-        primaryRole = hierarchyRole;
-        break;
-      }
-    }
-
-    // Redirigir según el rol principal (código existente)
+    // Usar RoleService para determinar el rol principal
+    const primaryRole = this.roleService.getPrimaryRole();
+    
     switch (primaryRole) {
-      case AUTH.ROLES.ADMIN:
+      case this.roleService.ROLES.ADMIN:
         console.log('➡️ Redirigiendo a admin dashboard');
-        this.router.navigate(['/admin/dashboard']);
+        this.router.navigate(['/admin']);
         break;
-      case AUTH.ROLES.MODERATOR:
-        console.log('➡️ Redirigiendo a moderator dashboard');
-        this.router.navigate(['/moderator/dashboard']);
-        break;
-      case AUTH.ROLES.USER:
+      case this.roleService.ROLES.USER:
         console.log('➡️ Redirigiendo a user dashboard');
-        this.router.navigate(['/user/dashboard']);
+        this.router.navigate(['/user']);
+        break;
+      case this.roleService.ROLES.MODERATOR:
+        console.log('➡️ Redirigiendo a moderator dashboard');
+        this.router.navigate(['/moderator']);
         break;
       default:
-        console.log('⚠️ Roles no reconocidos:', roles, 'redirigiendo a dashboard por defecto');
-        this.router.navigate(['/dashboard']);
+        console.log('⚠️ Rol no reconocido, redirigiendo a home');
+        this.router.navigate(['/']);
         break;
     }
   }
 
-
- 
   // ============================================
-  // SISTEMA DE LOGOUT
+  // LOGOUT
   // ============================================
 
   /**
-   * Logout del servidor - Retorna Observable para manejar en componente
+   * Logout completo con llamada al servidor
+   * @returns Observable para manejar en componente
    */
   logoutFromServer(): Observable<any> {
-    const token = this.getAuthToken();
-
-    if (!token) {
+    const sessionInfo = this.sessionService.getSessionInfo();
+    
+    if (!sessionInfo.token) {
       return of({ message: 'No hay token para invalidar' });
     }
 
     const headers = {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${sessionInfo.token}`,
       'Content-Type': 'application/json',
     };
 
@@ -302,46 +244,29 @@ export class AuthService {
   }
 
   /**
-   * Limpia todos los datos locales
+   * Logout simple (limpia datos locales y redirige)
    */
-  cleanLocalData(): void {
-    try {
-      const localStorageKeys = [
-        'auth_token',
-        'user_data',
-        'user_roles',
-        'user_role',
-        'refresh_token',
-        'token_expiration',
-      ];
-
-      const sessionStorageKeys = [
-        'auth_token',
-        'user_data',
-        'user_roles',
-        'user_role',
-        'refresh_token',
-        'token_expiration',
-      ];
-
-      localStorageKeys.forEach((key) => localStorage.removeItem(key));
-      sessionStorageKeys.forEach((key) => sessionStorage.removeItem(key));
-
-      this.userRolesSubject.next([]);
-      
-      // Limpiar también el GuardService
-      this.guardService.clearCurrentUser();
-      
-      console.log('Datos locales limpiados exitosamente');
-    } catch (error) {
-      console.error('Error al limpiar datos locales:', error);
-    }
+  logout(): void {
+    console.log('🚪 Cerrando sesión...');
+    this.cleanupAndRedirect();
   }
 
   /**
-   * Redirige al login
+   * Logout de emergencia (sin comunicación con servidor)
    */
-  redirectToLogin(queryParams?: any): void {
+  emergencyLogout(): void {
+    console.warn('🔥 Ejecutando logout de emergencia');
+    this.cleanupAndRedirect({ emergency: 'true' });
+  }
+
+  /**
+   * Limpia datos y redirige al login
+   * @param queryParams Parámetros adicionales para la URL
+   */
+  private cleanupAndRedirect(queryParams?: any): void {
+    this.sessionService.clearSession();
+    this.userRolesSubject.next([]);
+    
     this.router.navigate(['/auth/login'], {
       queryParams: queryParams || {
         logout: 'true',
@@ -350,59 +275,153 @@ export class AuthService {
     });
   }
 
-  /**
-   * Logout simple (solo limpia datos y redirige)
-   */
-  logout(): void {
-    this.cleanLocalData();
-    this.redirectToLogin();
-  }
-
-  /**
-   * Logout de emergencia (sin servidor)
-   */
-  emergencyLogout(): void {
-    console.warn('Ejecutando logout de emergencia');
-    this.cleanLocalData();
-    this.redirectToLogin({ emergency: 'true' });
-  }
-
-
-
   // ============================================
-  // MÉTODOS NUEVOS PARA INTEGRACIÓN
+  // MÉTODOS DE VERIFICACIÓN (Para componentes)
   // ============================================
 
   /**
-   * Inicializar el estado del usuario al cargar la aplicación
-   * Llamar desde app.component.ts o main.ts
+   * Verifica si el usuario está autenticado
+   * @returns true si tiene sesión válida
    */
-  public initializeUserSession(): void {
-    if (this.isAuthenticated()) {
-      const userData = this.getUserDataFromStorage();
-      if (userData) {
-        this.guardService.setCurrentUser(userData);
-        this.setUserRoles(userData.roles || []);
-      }
-    }
+  isAuthenticated(): boolean {
+    return this.sessionService.hasValidSession();
   }
 
   /**
-   * Obtener datos del usuario desde storage (ahora público)
+   * Verifica si el usuario tiene un rol específico
+   * @param role Rol a verificar
+   * @returns true si tiene el rol
    */
-  public getUserDataFromStorage(): any {
-    const userData = localStorage.getItem('user_data') || sessionStorage.getItem('user_data');
-    return userData ? JSON.parse(userData) : null;
+  hasRole(role: string): boolean {
+    return this.sessionService.hasRole(role);
   }
 
   /**
-   * Verificar si el usuario puede acceder a una ruta específica
+   * Verifica si el usuario tiene alguno de los roles
+   * @param roles Array de roles a verificar
+   * @returns true si tiene al menos uno
    */
-  public canAccessRoute(route: string, requiredRoles?: string[]): Observable<boolean> {
-    if (!requiredRoles || requiredRoles.length === 0) {
-      return this.guardService.isAuthenticated();
+  hasAnyRole(roles: string[]): boolean {
+    return this.sessionService.hasAnyRole(roles);
+  }
+
+  /**
+   * Obtiene los datos del usuario actual
+   * @returns Datos del usuario o null
+   */
+  getCurrentUser(): any {
+    const sessionInfo = this.sessionService.getSessionInfo();
+    return sessionInfo.userData;
+  }
+
+  /**
+   * Obtiene información del usuario actual
+   * @returns Información básica del usuario
+   */
+  getCurrentUserInfo(): any {
+    const sessionInfo = this.sessionService.getSessionInfo();
+    return sessionInfo.userInfo;
+  }
+
+  /**
+   * Obtiene los roles del usuario actual
+   * @returns Array de roles
+   */
+  getUserRoles(): string[] {
+    const sessionInfo = this.sessionService.getSessionInfo();
+    return sessionInfo.roles;
+  }
+
+  /**
+   * Obtiene el rol principal del usuario
+   * @returns Rol principal o null
+   */
+  getPrimaryRole(): string | null {
+    return this.sessionService.getPrimaryRole();
+  }
+
+  /**
+   * Obtiene mensaje de bienvenida personalizado
+   * @returns Mensaje de bienvenida
+   */
+  getWelcomeMessage(): string {
+    return this.sessionService.getWelcomeMessage();
+  }
+
+  // ============================================
+  // UTILIDADES
+  // ============================================
+
+  /**
+   * Verifica si la sesión está próxima a expirar
+   * @param minutes Minutos antes de expiración
+   * @returns true si está próxima a expirar
+   */
+  isSessionNearExpiry(minutes: number = 5): boolean {
+    return this.sessionService.isSessionNearExpiry(minutes);
+  }
+
+  /**
+   * Obtiene información completa de la sesión
+   * @returns Información detallada de la sesión
+   */
+  getSessionInfo(): any {
+    return this.sessionService.getSessionInfo();
+  }
+
+  /**
+   * Obtiene estado de la sesión para debugging
+   * @returns Estado detallado
+   */
+  getSessionStatus(): any {
+    return this.sessionService.getSessionStatus();
+  }
+
+  /**
+   * Actualiza los datos del usuario en la sesión actual
+   * @param userData Nuevos datos del usuario
+   */
+  updateUserData(userData: any): void {
+    this.sessionService.refreshUserData(userData);
+    
+    // Actualizar roles si cambiaron
+    if (userData.roles) {
+      this.userRolesSubject.next(userData.roles);
     }
-    return this.guardService.hasAnyRole(requiredRoles);
+  }
+
+  // ============================================
+  // MANEJO DE ERRORES
+  // ============================================
+
+  /**
+   * Maneja errores de autenticación de forma centralizada
+   * @param error Error HTTP recibido
+   * @returns Observable con error procesado
+   */
+  private handleAuthError(error: HttpErrorResponse): Observable<never> {
+    console.error('❌ Error de autenticación:', error);
+    
+    // Si es error 401, hacer logout automático
+    if (error.status === 401) {
+      console.log('🔒 Token inválido, cerrando sesión automáticamente');
+      this.emergencyLogout();
+    }
+    
+    // Re-lanzar el error para que el componente pueda manejarlo
+    return throwError(() => error);
+  }
+
+  // ============================================
+  // MÉTODOS PARA COMPATIBILIDAD
+  // ============================================
+
+  /**
+   * Setter para roles (para compatibilidad con código existente)
+   * @param roles Array de roles
+   */
+  setUserRoles(roles: string[]): void {
+    this.userRolesSubject.next(roles);
   }
 
 

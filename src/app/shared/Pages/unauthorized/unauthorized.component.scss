@@ -1,0 +1,245 @@
+
+.unauthorized-container {
+  max-width: 650px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+  position: relative;
+}
+
+:host ::ng-deep {
+  /* Variables de tema y colores */
+  --surface-a: var(--surface-card);
+  --surface-b: var(--surface-section);
+  --surface-c: var(--surface-border);
+  --surface-d: var(--surface-border);
+  --surface-e: var(--surface-card);
+  --surface-f: var(--surface-card);
+  --text-color: var(--text-color);
+  --text-color-secondary: var(--text-color-secondary);
+  --primary-color: #c96442;
+  --primary-color-text: #ffffff;
+
+  /* Estilos para el Card principal */
+  .p-card.unauthorized-card {
+    background-color: var(--surface-card);
+    color: var(--text-color);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+    overflow: hidden;
+    border: none;
+    border-left: 3px solid #c96442;
+  }
+
+  /* Encabezado */
+  .card-header {
+    background-color: var(--surface-section);
+    color: white;
+    padding: 1.5rem 1.75rem;
+    text-align: left;
+    position: relative;
+    background: linear-gradient(
+        to right,
+        rgba(201, 100, 66, 0.12),
+        transparent 85%
+      ),
+      var(--surface-section);
+    border-bottom: 2px solid #c96442;
+
+    h2 {
+      color: white;
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin: 0;
+      padding: 0;
+      letter-spacing: -0.01em;
+      border-left: 3px solid #c96442;
+      padding-left: 12px;
+    }
+  }
+
+  /* Contenido */
+  .p-card .p-card-content {
+    padding: 1.75rem;
+  }
+
+  .content-section {
+    text-align: center;
+  }
+
+  /* Icono de error */
+  .error-icon-container {
+    margin-bottom: 1.5rem;
+    
+    .error-icon {
+      font-size: 4rem;
+      color: #c96442;
+      opacity: 0.8;
+    }
+  }
+
+  /* Código de error */
+  .error-code {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #c96442;
+    margin: 0 0 1.5rem 0;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Descripción del error */
+  .error-description {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    line-height: 1.6;
+    margin: 0 0 2rem 0;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Campos */
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  /* Botones */
+  .p-button {
+    border-radius: 6px;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+
+    &.login-button {
+      background-color: #c96442 !important;
+      border-color: #c96442 !important;
+      color: white;
+      box-shadow: 0 4px 10px rgba(201, 100, 66, 0.25);
+      height: 3rem;
+      
+      &:enabled:hover {
+        background-color: #b04e30 !important;
+        border-color: #b04e30 !important;
+        box-shadow: 0 5px 14px rgba(201, 100, 66, 0.3);
+      }
+    }
+
+    &.p-button-outlined {
+      color: var(--text-color);
+      border-color: var(--surface-border);
+      background-color: transparent;
+      height: 3rem;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.03);
+        border-color: #c96442;
+        color: #c96442;
+      }
+    }
+    
+    &.p-button-text {
+      color: #c96442;
+      background-color: transparent;
+      border: none;
+      
+      &:hover {
+        background-color: rgba(201, 100, 66, 0.08);
+        color: #c96442;
+      }
+
+      &.secondary-button {
+        color: var(--text-color-secondary);
+        
+        &:hover {
+          color: #c96442;
+          background-color: rgba(201, 100, 66, 0.05);
+        }
+      }
+    }
+
+    .p-button-icon {
+      margin-right: 0.5rem;
+      font-size: 0.95rem;
+    }
+  }
+  
+  /* Divider */
+  .p-divider {
+    margin: 1.5rem 0;
+    
+    .divider-text {
+      background-color: var(--surface-card);
+      color: var(--text-color-secondary);
+      padding: 0 0.75rem;
+      font-size: 0.85rem;
+    }
+  }
+  
+  /* Acciones secundarias */
+  .secondary-actions {
+    margin: 1rem 0;
+  }
+  
+  /* Información de contacto */
+  .contact-info {
+    border-top: 1px solid var(--surface-border);
+    padding-top: 1.5rem;
+    margin-top: 2rem;
+    
+    .contact-text {
+      font-size: 0.85rem;
+      color: var(--text-color-secondary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      
+      .pi {
+        font-size: 0.9rem;
+        color: #c96442;
+      }
+    }
+  }
+}
+
+/* Media queries */
+@media screen and (max-width: 576px) {
+  .unauthorized-container {
+    margin: 1rem auto;
+    padding: 0 0.75rem;
+  }
+  
+  :host ::ng-deep {
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      
+      h2 {
+        font-size: 1.2rem;
+      }
+    }
+    
+    .p-card .p-card-content {
+      padding: 1.25rem;
+    }
+    
+    .error-icon-container .error-icon {
+      font-size: 3rem;
+    }
+    
+    .error-description {
+      font-size: 0.9rem;
+    }
+    
+    .p-button {
+      height: 2.75rem !important;
+      font-size: 0.9rem !important;
+    }
+    
+    .contact-text {
+      font-size: 0.8rem !important;
+      flex-direction: column;
+      gap: 0.25rem !important;
+    }
+  }
+}

@@ -1,0 +1,46 @@
+<div class="unauthorized-container">
+  <p-card styleClass="shadow-4 border-round-xl unauthorized-card">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>Acceso No Autorizado</h2>
+      </div>
+    </ng-template>
+    
+    <div class="content-section">
+      <!-- Icono y código de error -->
+      <div class="error-icon-container">
+        <i class="pi pi-lock error-icon"></i>
+      </div>
+      
+      <div class="error-code">
+        Error 401 - Unauthorized
+      </div>
+      
+      <p class="error-description">
+        Lo sentimos, no tienes permisos para acceder a esta página. 
+        Puede que necesites iniciar sesión o que no tengas los privilegios necesarios.
+      </p>
+      
+      <!-- Acciones principales -->
+      <div class="grid mt-4">
+        <div class="col-12 md:col-6 field">
+          <button pButton type="button" label="Iniciar Sesión" icon="pi pi-sign-in" 
+                  class="w-full login-button" (click)="goToLogin()"></button>
+        </div>
+        
+        <div class="col-12 md:col-6 field">
+          <button pButton type="button" label="Ir al Inicio" icon="pi pi-home" 
+                  class="w-full p-button-outlined" (click)="goHome()"></button>
+        </div>
+      </div>
+      
+      <!-- Información de contacto -->
+      <div class="contact-info">
+        <p class="contact-text">
+          <i class="pi pi-info-circle"></i>
+          Si crees que esto es un error, contacta al administrador del sistema.
+        </p>
+      </div>
+    </div>
+  </p-card>
+</div>
